@@ -6,7 +6,7 @@
 
 当前阶段：已立项，官方通道可行性已初步确认，DSH 接口待核实
 
-当前版本：`main`；首次 Git 基线待记录
+当前版本：`main`；首次 Git 基线 `85a3530`
 
 ## 已完成
 
@@ -16,6 +16,7 @@
 - 已确认主模型可使用官方 Responses 路径，独立 Agent 可使用 Codex app-server 路径。
 - 已明确禁止 Cookie/令牌提取、账户共享、隐性付费 fallback 和未经批准的远程托管。
 - 已登记到工作区 `PROJECTS.json` 与 `PROJECTS.md`。
+- 已完成首次 Git 基线。证据：提交 `85a3530`（`chore: establish project baseline`）。
 
 ## 当前未完成
 
@@ -53,6 +54,8 @@ git log --oneline -2
 ```
 
 当前没有产品运行命令。
+
+立项验证证据：工作区登记可解析，永久编号 `20` 唯一；项目分支为 `main`；首次基线包含 6 个受版本控制的文件。
 
 ## 关键决定
 

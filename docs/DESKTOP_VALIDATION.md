@@ -46,4 +46,15 @@
 
 - 在正式 Windows Desktop 0.2.2-rc.3 上，通过同一个本地 HTTP 代理验证了真实 Luna 流式对话和授权刷新。上游 5xx 和请求 ID 由本地回归测试覆盖。
 - 将同一静默启动补丁提前应用于正式 Desktop 的 MemSearch 0.1.8 后，真实 GPT‑6.1‑Sol 回复正常流式结束。MemSearch 自动落盘，本地搜索命中新索引。150 秒监测未发现可见命令窗口。
-- v0.1.1 安装包通过官方 CLI 装入独立 Windows Desktop 0.2.2-rc.3。与原版 MemSearch 0.1.9 并存时自动应用补丁。运行中恢复原厂文件后，插件再次应用补丁。隔离夹具通过授权、主对话流和 Codex 委派。补丁热重载后再发送一条夹具消息，确认自动捕获和向量索引文件均已生成，35 秒监测未发现可见命令窗口。真实账号记录来自上面两次正式 Desktop 回归以及前述 v0.1.0 额度验收。
+- v0.1.1 安装包通过官方 CLI 装入独立 Windows Desktop 0.2.2-rc.3。与原版 MemSearch 0.1.9 并存时自动应用补丁。运行中恢复原厂文件后，插件再次应用补丁。隔离夹具通过授权、主对话流和 Codex 委派。补丁热重载后再发送一条夹具消息，确认自动捕获和向量索引文件均已生成，35 秒监测未发现可见命令窗口。
+
+### 正式 Desktop 升级验收（2026-11-14）
+
+在日常使用的官方 Windows Desktop `0.2.2-rc.3` 上，从 GitHub Release 下载 `dsh-chatgpt v0.1.1`，校验安装包的 SHA‑256，再通过 Desktop 自带 CLI 将现有 `0.1.0` 升级为 `0.1.1` 并重启。 [v0.1.1 Release](https://github.com/Yatcen/dsh-chatgpt/releases/tag/v0.1.1)
+
+| 项目 | 结果 |
+| --- | --- |
+| ChatGPT 授权与代理 | 升级前后授权文件和 Desktop 配置校验一致。重启后沿用现有 ChatGPT 授权与 Clash Verge 本地 HTTP 代理 `http://127.0.0.1:7897`，全程未切换节点。 |
+| Luna 流式回复 | 通过 `dsh-chatgpt` 路由发送一条真实 `gpt-5.6-luna` 消息，收到 12 个文本增量，回复正常结束。 |
+| MemSearch 自动捕获与索引 | MemSearch `0.1.8` 自动保存本轮对话并生成向量索引。本地查询成功命中新捕获的记录。 |
+| Windows 闪窗 | 从发消息前到索引完成后持续监测 100 秒，未检测到可见的命令窗口，也未发现新启动的 Windows Terminal 进程。 |

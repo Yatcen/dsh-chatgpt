@@ -5,6 +5,7 @@ import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol';
 import { APP_NAME, ChatGptAuth } from './auth.js';
 import { createCodexProvider } from './codex.js';
 import { openStore } from './store.js';
+import { createTransport } from './transport.js';
 import { ChatGptAdapter, isCodedError } from './vendor/chatgpt/adapter.js';
 import { requestOf } from './vendor/chatgpt/convert/harness.js';
 
@@ -13,12 +14,15 @@ export const inject = ['llm', 'subagents', 'subprocess', 'profileContext'];
 export const Config = z.object({
   codexExecutable: z.string().description('Absolute path to the official Codex codex.exe.').volatile(),
   codexModel: z.string().description('ChatGPT model slug for Codex tasks. Leave blank to use the first available model.').volatile(),
+  proxyUrl: z.string().description('HTTP proxy for ChatGPT requests and Codex, e.g. http://127.0.0.1:7897. Empty uses the Harness network settings.').volatile(),
 });
 
 const displayName = 'ChatGPT';
 
 function modelsError(error) {
-  if (isCodedError(error)) return new LlmError(error.message, error.code, { status: error.status });
+  if (isCodedError(error)) {
+    return new LlmError(error.message, error.code, { status: error.status, requestId: error.requestId });
+  }
   return new LlmError('The ChatGPT request could not be completed.', 'chatgpt_request_failed');
 }
 
@@ -80,19 +84,25 @@ class Controller extends TypertRemoteService {
 export async function apply(ctx, config) {
   const stateDir = join(ctx.profileContext.home, 'dsh-chatgpt');
   const store = await openStore(stateDir);
+  const transport = createTransport(() => config.proxyUrl.get());
   let auth;
   let codex;
   const dispose = async () => {
     try {
       await codex?.close();
     } finally {
-      if (auth) await auth.close();
-      else await store.close();
+      try {
+        await transport.close();
+      } finally {
+        if (auth) await auth.close();
+        else await store.close();
+      }
     }
   };
   let inner;
   try {
     auth = await ChatGptAuth.create(store, {
+      fetcher: transport.fetch,
       onChange() {
         inner.forgetListing();
         ctx.emit('llm/models-updated', APP_NAME);
@@ -103,7 +113,7 @@ export async function apply(ctx, config) {
       async fetch(url, options = {}) {
         const headers = new Headers(options.headers);
         for (const [key, val] of Object.entries(attributionHeaders())) headers.set(key, val);
-        return fetch(url, { ...options, headers, redirect: 'error',
+        return transport.fetch(url, { ...options, headers,
           signal: options.signal ?? AbortSignal.timeout(45_000) });
       },
       onListingRecovered: () => ctx.emit('llm/models-updated', APP_NAME),
@@ -119,6 +129,7 @@ export async function apply(ctx, config) {
       subprocess: ctx.subprocess, auth, listModels: () => adapter.listModels(APP_NAME), stateDir,
       executable: () => config.codexExecutable.get() || process.env.DSH_CHATGPT_CODEX_EXECUTABLE,
       model: () => config.codexModel.get(),
+      proxyEnvironment: transport.codexEnvironment,
     });
     const removeProvider = ctx.subagents.registerProvider(codex.provider);
     ctx.effect(() => removeProvider);

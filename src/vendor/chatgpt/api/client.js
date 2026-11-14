@@ -6,10 +6,8 @@
  * credential for listing *and* inference, which is why a listing failure and an
  * inference failure usually mean the same thing.
  *
- * A non-2xx response is turned into an error carrying the endpoint's own code,
- * because the code is what tells the caller whether to retry, re-authorize, or
- * report that the plan cannot be spent: `subscription_sharing_usage_limit_exceeded`
- * and `invalid_api_key` call for three different answers.
+ * HTTP failures retain the status and any OpenAI request ID. Upstream 5xx
+ * responses use the host's server-error retry code.
  *
  * @module dsh-plugin-chatgpt/client
  */
@@ -22,26 +20,35 @@ export class ApiError extends Error {
     code;
     /** HTTP status, when the failure was a response rather than a transport fault. */
     status;
+    requestId;
     /** Whether the account's plan is the thing refusing, so the human is told to check usage. */
     planUsage;
     /**
      * @param message - what the endpoint reported.
-     * @param code - the endpoint's own error code.
+     * @param code - the endpoint error code or host retry code.
      * @param status - HTTP status, when there was one.
+     * @param requestId - OpenAI request identifier, when available.
      */
-    constructor(message, code, status) {
+    constructor(message, code, status, requestId) {
         super(message);
         this.name = 'ApiError';
         this.code = code;
         this.planUsage = isPlanUsageCode(code);
         if (status !== undefined)
             this.status = status;
+        if (requestId !== undefined)
+            this.requestId = requestId;
     }
 }
 /** Pull a code and message out of an error body without assuming its shape. */
-function errorOf(body, status) {
+async function errorOf(response) {
+    const { status, headers } = response;
+    const requestId = headers.get('x-request-id') ?? headers.get('openai-request-id') ?? '';
+    const safeId = /^[a-z0-9_.-]{1,128}$/i.test(requestId) ? requestId : undefined;
+    const fallback = `http_${status}`;
+    let code = fallback;
     try {
-        const parsed = JSON.parse(body);
+        const parsed = await response.json();
         if (typeof parsed === 'object' && parsed !== null) {
             const record = parsed;
             const nested = typeof record['error'] === 'object' && record['error'] !== null
@@ -49,15 +56,19 @@ function errorOf(body, status) {
                 : record;
             const candidate = typeof nested['code'] === 'string'
                 ? nested['code']
-                : typeof nested['type'] === 'string' ? nested['type'] : `http_${status}`;
-            const code = /^[a-z][a-z0-9_]{0,63}$/i.test(candidate) ? candidate : `http_${status}`;
-            return new ApiError(`OpenAI request failed (HTTP ${status}, ${code}).`, code, status);
+                : nested['type'];
+            if (typeof candidate === 'string' && /^[a-z][a-z0-9_]{0,63}$/i.test(candidate))
+                code = candidate;
         }
     }
     catch {
         // A non-JSON body says nothing about the code; the status is the fact.
     }
-    return new ApiError(`OpenAI request failed (HTTP ${status}).`, `http_${status}`, status);
+    const serverFailure = status >= 500;
+    const message = serverFailure
+        ? `The OpenAI API connection returned HTTP ${status} (${code}). If it persists, check the proxy connection and try again.`
+        : `OpenAI request failed (HTTP ${status}, ${code}).`;
+    return new ApiError(message, serverFailure ? 'SERVER' : code, status, safeId);
 }
 /** Build the headers every call carries. */
 function headersFor(accessToken, cacheKey) {
@@ -90,7 +101,7 @@ export async function listModels(accessToken, endpoints, signal) {
         ...signal === undefined ? {} : { signal },
     });
     if (!response.ok) {
-        throw errorOf(await response.text().catch(() => ''), response.status);
+        throw await errorOf(response);
     }
     const parsed = (await response.json());
     const entries = typeof parsed === 'object' && parsed !== null
@@ -165,7 +176,7 @@ export async function* streamTurn(options) {
         ...options.signal === undefined ? {} : { signal: options.signal },
     });
     if (!response.ok) {
-        throw errorOf(await response.text().catch(() => ''), response.status);
+        throw await errorOf(response);
     }
     if (response.body === null) {
         throw new ApiError('the endpoint returned no response body', 'empty_stream', response.status);

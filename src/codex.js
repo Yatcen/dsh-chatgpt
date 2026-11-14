@@ -102,7 +102,7 @@ function rpc(handle, signal, onEvent) {
   };
 }
 
-export function createCodexProvider({ subprocess, auth, listModels, executable, model, stateDir }) {
+export function createCodexProvider({ subprocess, auth, listModels, executable, model, stateDir, proxyEnvironment }) {
   const activeRuns = new Set();
   const shutdown = new AbortController();
   const providerImpl = {
@@ -158,7 +158,7 @@ export function createCodexProvider({ subprocess, auth, listModels, executable, 
         lifetime.throwIfAborted();
         handle = subprocess.spawn({
           argv: [client, ...codexArgs()], cwd,
-          env: { CODEX_HOME: home, ACCESS_TOKEN: grant.accessToken },
+          env: { ...proxyEnvironment?.(), CODEX_HOME: home, ACCESS_TOKEN: grant.accessToken },
           stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'ignore' },
           graceMs: 2_000, signal: lifetime,
         });

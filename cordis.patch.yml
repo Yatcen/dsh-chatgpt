@@ -1,6 +1,8 @@
 - insert:
     - id: dsh-chatgpt
       name: dsh-chatgpt
+    - id: dsh-chatgpt-memsearch-compat
+      name: dsh-chatgpt/memsearch-compat
     - id: tool-subagent-dsh-chatgpt
       name: '@deepseek-ai/dsh-tool-subagent'
       config:

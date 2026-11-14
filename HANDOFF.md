@@ -6,7 +6,7 @@
 
 当前阶段已交付 Windows Desktop 的可安装插件。隔离 profile 已通过真实账户的主对话与 Codex 子任务验收，额度判断和证据范围已写入实测记录。
 
-当前版本为 `v0.1.0`，首次 Git 基线为 `85a3530`。
+当前安装包版本为 `v0.1.1`，首次 Git 基线为 `85a3530`。
 
 ## 已完成
 
@@ -20,6 +20,9 @@
 - 固定首个目标为官方 Windows Desktop `0.2.2-rc.3`。已核对 MIT 许可证、Cordis Bundle、LLM 流、外部子 Agent、配置目录和生命周期。见 [DSH 插件契约](docs/DSH_PLUGIN_CONTRACT.md)。
 - 已实现共享 SIWC OAuth、Windows DPAPI 存储、Responses 流适配器、模型设置卡和独立 Codex app-server 后端。
 - 9 项本地测试通过。官方 Windows Desktop `0.2.2-rc.3` 解包运行，在独立 `desktop` profile 中使用官方捆绑 CLI 安装，实测 `DESKTOP_ACCOUNT_OK`、`DESKTOP_STREAM_OK` 与 `DESKTOP_DELEGATION_OK`。真实 Codex `0.142.3` 的 stdio 初始化也已验证。
+
+- v0.1.1 提供可配置的本地 HTTP 代理，覆盖模型目录、Responses、授权刷新和 Codex，并给上游 5xx 保留可供诊断的请求 ID。
+- v0.1.1 在官方 Windows Desktop 0.2.2-rc.3 中对当前 profile 的已知 MemSearch 0.1.8/0.1.9 运行文件自动应用后台静默修复，保留捕获和索引。验收细节见 [Desktop 记录](docs/DESKTOP_VALIDATION.md#v011-windows-兼容性回归)。
 
 ## 真实验收
 
@@ -38,7 +41,7 @@
 
 ## 下一项任务
 
-如需逐笔核对，需有带请求时间和扣减来源的 OpenAI 用量记录，或保留测试前后的额度与 Credits 余额变化。 [实测记录](docs/DESKTOP_VALIDATION.md#2026-11-14-实测)
+下一次升级 MemSearch 前，在隔离 Desktop 中验证新版是否已经静默启动。上游支持后，移除旧版本兼容补丁。
 
 ## 最小启动与验证
 

@@ -4,15 +4,15 @@
 
 ## 当前阶段
 
-已提供可安装的 `dsh-chatgpt 0.1.0`，支持官方 Windows Desktop `0.2.2-rc.3`。已在隔离 Desktop 中用真实账户验证 GPT 主对话流和独立 Codex 子 Agent 回传。测试期间 Credits 回退始终关闭，两条路径的真实验收请求均使用 ChatGPT 订阅内额度，均未使用 Credits。具体扣减量无法逐笔核对。见 [实测记录](docs/DESKTOP_VALIDATION.md#2026-11-14-实测)。
+已提供可安装的 `dsh-chatgpt 0.1.1`，支持官方 Windows Desktop `0.2.2-rc.3`。v0.1.0 已在隔离 Desktop 中用真实账户验证 GPT 主对话流和独立 Codex 子 Agent 回传。测试期间 Credits 回退始终关闭，两条路径的真实验收请求均使用 ChatGPT 订阅内额度，均未使用 Credits。具体扣减量无法逐笔核对。见 [实测记录](docs/DESKTOP_VALIDATION.md#2026-11-14-实测)。
 
 ## 安装和使用
 
-1. 从项目根目录运行 `npm pack` 生成 `dsh-chatgpt-0.1.0.tgz`，或使用已打好的包。
+1. 从项目根目录运行 `npm pack` 生成 `dsh-chatgpt-0.1.1.tgz`，或使用已打好的包。
 2. 打开官方 Desktop 一次以创建 profile。启用 **Manage dsh Command** 后完全退出 Desktop，在新开的 PowerShell 中执行：
 
    ```powershell
-   dsh plugin --profile desktop add ./dsh-chatgpt-0.1.0.tgz
+   dsh plugin --profile desktop add ./dsh-chatgpt-0.1.1.tgz
    ```
 
 3. 重启 Desktop，从 **Settings → Models → ChatGPT** 点击 **Continue with ChatGPT**，再打开授权链接。自行选择 ChatGPT 账号与 workspace，授权计划用量，随后返回 Desktop。对话输入框的模型选择器会展示该账户当前公开的模型。
@@ -20,6 +20,12 @@
 5. 在 ChatGPT 卡片中切换账户、注销或打开计划用量页。卸载时退出 Desktop，执行 `dsh plugin --profile desktop remove dsh-chatgpt`。
 
 两条路径由同一个 OAuth 服务取得 access token。令牌在 Windows 上通过当前用户 DPAPI 存放于 `$DSH_HOME/dsh-chatgpt`。子 Agent 每次新建一个只读 Codex thread，使用独立的临时 `CODEX_HOME`，完成后向父会话交付结果。此版本以文本对话和单次委派为验收范围。
+
+如果本地 HTTP 代理能访问 OpenAI，打开 **Settings → Models → ChatGPT → Edit**，在 `proxyUrl` 填写本机 HTTP 代理地址，例如 Clash Verge 的 `http://127.0.0.1:7897`。插件使用该入口获取模型、调用 Responses、刷新授权和启动 Codex。Clash Verge 中更换出站线路时可以沿用这个地址。留空则使用 Harness 的网络设置。当前线路需能访问 `api.openai.com` 和 `auth.openai.com`。
+
+### Windows 下的 MemSearch
+
+如果同一个 Desktop profile 已安装 MemSearch 0.1.8 或 0.1.9，新版启动后会自动修复索引进程闪出命令窗口的问题，保留自动捕获、索引和维护任务。补丁只匹配这两个版本的原始运行文件。若已知版本被重装覆盖，插件会重新检查。使用自定义源码链接或其他版本时，插件跳过兼容修复。首次升级按上面的安装步骤完全退出 Desktop，再安装新版并打开。若 DSH 日志提示需要重启，请再重启一次以加载补丁。
 
 Canonical root：
 

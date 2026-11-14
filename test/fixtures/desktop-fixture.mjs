@@ -82,6 +82,11 @@ export function apply(ctx) {
       const body = options.body;
       assert.equal(body.get('resource'), api);
       assert.equal(body.get('client_id'), clientId);
+      if (body.get('grant_type') === 'refresh_token') {
+        assert.equal(body.get('refresh_token'), 'fixture-refresh-token');
+        return Response.json({ access_token: 'fixture-access-token',
+          refresh_token: 'fixture-refresh-token', expires_in: 3600, scope });
+      }
       const grant = authorized.get(body.get('code'));
       assert.ok(grant);
       assert.equal(grant.get('redirect_uri'), body.get('redirect_uri'));

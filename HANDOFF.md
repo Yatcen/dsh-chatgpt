@@ -4,9 +4,9 @@
 
 项目根目录：`D:\AI\WorkSpace\20-dsh-chatgpt插件`
 
-当前阶段：已立项，官方通道可行性已初步确认，DSH 接口待核实
+当前阶段已交付 Windows Desktop 的可安装插件。隔离 profile 已通过真实账户的主对话与 Codex 子任务验收，额度判断和证据范围已写入实测记录。
 
-当前版本：`main`；首次 Git 基线 `85a3530`
+当前版本为 `v0.1.0`，首次 Git 基线为 `85a3530`。
 
 ## 已完成
 
@@ -17,14 +17,13 @@
 - 已明确禁止 Cookie/令牌提取、账户共享、隐性付费 fallback 和未经批准的远程托管。
 - 已登记到工作区 `PROJECTS.json` 与 `PROJECTS.md`。
 - 已完成首次 Git 基线。证据：提交 `85a3530`（`chore: establish project baseline`）。
+- 固定首个目标为官方 Windows Desktop `0.2.2-rc.3`。已核对 MIT 许可证、Cordis Bundle、LLM 流、外部子 Agent、配置目录和生命周期。见 [DSH 插件契约](docs/DSH_PLUGIN_CONTRACT.md)。
+- 已实现共享 SIWC OAuth、Windows DPAPI 存储、Responses 流适配器、模型设置卡和独立 Codex app-server 后端。
+- 9 项本地测试通过。官方 Windows Desktop `0.2.2-rc.3` 解包运行，在独立 `desktop` profile 中使用官方捆绑 CLI 安装，实测 `DESKTOP_ACCOUNT_OK`、`DESKTOP_STREAM_OK` 与 `DESKTOP_DELEGATION_OK`。真实 Codex `0.142.3` 的 stdio 初始化也已验证。
 
-## 当前未完成
+## 真实验收
 
-- 尚未获得 DSH 的完整名称、canonical root、仓库 URL、许可证、版本和插件接口。
-- 尚未确认 DSH 主模型 Provider、流式事件、工具调用和独立 Agent 的具体契约。
-- 尚未核实 DSH 的分发形态是否符合 Sign in with ChatGPT 的 open-source/local eligibility。
-- 尚未安装官方 DevKit、Codex app-server 或任何依赖。
-- 尚未接入真实账户、执行 OAuth、列出模型或发送模型请求。
+- 已验证真实 workspace 授权、模型列表、主对话流式返回，以及 Codex 子任务完成回传。用户确认测试期间应用的 ChatGPT 套餐权限始终开启，Credits 回退始终关闭。两次成功请求均使用订阅内额度，均未使用 Credits。逐笔扣减量无法核对。
 
 ## 已知风险
 
@@ -39,21 +38,18 @@
 
 ## 下一项任务
 
-目标：取得并只读检查 DSH 的官方仓库或本地 canonical root，形成一份最小插件契约说明。
-
-验收标准：确认 DSH 版本、许可证、运行语言、插件加载方式、主模型 Provider 接口、独立 Agent 接口、流式事件、工具/审批/取消机制、配置与凭据目录；据此确定首个 fake adapter 的文件位置和最小测试命令。
-
-不要做：不修改 DSH，不安装依赖，不执行 OAuth，不读取现有 ChatGPT/Codex 认证文件，不发送模型请求，不设计通用多 Provider 层。
+如需逐笔核对，需有带请求时间和扣减来源的 OpenAI 用量记录，或保留测试前后的额度与 Credits 余额变化。 [实测记录](docs/DESKTOP_VALIDATION.md#2026-11-14-实测)
 
 ## 最小启动与验证
 
 ```powershell
 Set-Location 'D:\AI\WorkSpace\20-dsh-chatgpt插件'
-git status --short --branch
-git log --oneline -2
+npm ci --omit=peer
+npm test
+npm pack
 ```
 
-当前没有产品运行命令。
+打包产物可使用官方 Desktop 插件管理命令安装。详情见 [README](README.md#安装和使用)。
 
 立项验证证据：工作区登记可解析，永久编号 `20` 唯一；项目分支为 `main`；首次基线包含 6 个受版本控制的文件。
 

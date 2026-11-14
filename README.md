@@ -1,12 +1,25 @@
 # dsh-chatgpt 插件
 
-`dsh-chatgpt` 计划为 DSH 提供一个基于 OpenAI 官方授权通道的 ChatGPT 模型插件。符合条件的用户通过 **Sign in with ChatGPT** 明确授权后，插件使用其 ChatGPT 计划额度或可用 credits 完成合格请求；不要求用户复制浏览器 Cookie、ChatGPT 会话令牌或私有客户端凭据。
+`dsh-chatgpt` 通过 OpenAI 官方 **Sign in with ChatGPT** 为 DSH 提供 ChatGPT 模型。符合条件的用户授权后，插件可用其 ChatGPT 订阅额度完成合格请求。Credits 的使用由用户在 ChatGPT 用量设置中管理。
 
 ## 当前阶段
 
-阶段：已立项，官方通道可行性已初步确认，DSH 接口待核实。
+已提供可安装的 `dsh-chatgpt 0.1.0`，支持官方 Windows Desktop `0.2.2-rc.3`。已在隔离 Desktop 中用真实账户验证 GPT 主对话流和独立 Codex 子 Agent 回传。测试期间 Credits 回退始终关闭，两条路径的真实验收请求均使用 ChatGPT 订阅内额度，均未使用 Credits。具体扣减量无法逐笔核对。见 [实测记录](docs/DESKTOP_VALIDATION.md#2026-11-14-实测)。
 
-当前只有项目简报、官方集成基线和 Git 基线，没有插件代码、真实登录、模型调用或 DSH 集成。
+## 安装和使用
+
+1. 从项目根目录运行 `npm pack` 生成 `dsh-chatgpt-0.1.0.tgz`，或使用已打好的包。
+2. 打开官方 Desktop 一次以创建 profile。启用 **Manage dsh Command** 后完全退出 Desktop，在新开的 PowerShell 中执行：
+
+   ```powershell
+   dsh plugin --profile desktop add ./dsh-chatgpt-0.1.0.tgz
+   ```
+
+3. 重启 Desktop，从 **Settings → Models → ChatGPT** 点击 **Continue with ChatGPT**，再打开授权链接。自行选择 ChatGPT 账号与 workspace，授权计划用量，随后返回 Desktop。对话输入框的模型选择器会展示该账户当前公开的模型。
+4. 使用独立子 Agent 时，通过 ChatGPT 行的 **Edit** 填写官方 Codex `codex.exe` 的绝对路径。若用 Windows npm 安装 Codex，请使用对应平台包 `vendor/.../bin/codex.exe` 中的二进制。可填写列表中的模型 slug，也可留空采用列表首个模型。对话中要求当前 Agent 使用 `subagent_dsh_chatgpt` 委派一个只读文本任务。
+5. 在 ChatGPT 卡片中切换账户、注销或打开计划用量页。卸载时退出 Desktop，执行 `dsh plugin --profile desktop remove dsh-chatgpt`。
+
+两条路径由同一个 OAuth 服务取得 access token。令牌在 Windows 上通过当前用户 DPAPI 存放于 `$DSH_HOME/dsh-chatgpt`。子 Agent 每次新建一个只读 Codex thread，使用独立的临时 `CODEX_HOME`，完成后向父会话交付结果。此版本以文本对话和单次委派为验收范围。
 
 Canonical root：
 
@@ -16,7 +29,7 @@ D:\AI\WorkSpace\20-dsh-chatgpt插件
 
 ## 目标能力
 
-插件计划提供两种明确模式：
+插件提供两种模式：
 
 1. **主模型模式**：DSH 通过插件直接调用官方 Responses 通道，并使用登录账户实际可见的模型目录。
 2. **独立 Agent 模式**：DSH 启动官方 Codex app-server 子进程，创建独立 thread/turn，接收流式事件，并把最终结果返回给 DSH。
@@ -47,15 +60,17 @@ D:\AI\WorkSpace\20-dsh-chatgpt插件
 
 - [项目简报](docs/PROJECT_BRIEF.md)
 - [官方集成基线](docs/OFFICIAL_INTEGRATION_BASELINE.md)
+- [DeepSeek Harness Desktop 插件契约](docs/DSH_PLUGIN_CONTRACT.md)
 - [当前交接](HANDOFF.md)
 
 ## 当前验证
 
-本阶段没有产品运行命令。立项基线至少应满足：
+从项目根目录用 Node.js 24.9 或以上版本运行：
 
 ```powershell
-git status --short --branch
-git log --oneline -2
+npm ci --omit=peer
+npm test
+npm pack
 ```
 
-预期：分支为 `main`，存在 Git 基线，工作树干净。
+本地测试覆盖 OAuth 回调、授权范围、刷新并发、Windows 凭据存取、主对话流和取消。Desktop 端到端夹具及真实账号验收步骤见 [验证说明](docs/DESKTOP_VALIDATION.md)。

@@ -1,0 +1,33 @@
+{
+  "name": "dsh-chatgpt",
+  "version": "0.1.0",
+  "description": "ChatGPT plan access for DeepSeek Harness models and Codex subagents",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": ["src", "cordis.patch.yml", "docs", "HANDOFF.md"],
+  "engines": { "node": ">=24.9.0", "dsh": "0.2.2-rc.3" },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml", "platforms": ["win32"] },
+    "client": { "platform": "web" }
+  },
+  "dependencies": {
+    "jose": "6.2.17",
+    "proper-lockfile": "4.1.2"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-llm": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.2-rc.3",
+    "@deepseek-ai/schemastery": "~3.19.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-llm": { "optional": true },
+    "@deepseek-ai/dsh-typert-protocol": { "optional": true },
+    "@deepseek-ai/schemastery": { "optional": true }
+  },
+  "scripts": { "test": "node --test test/*.test.mjs" }
+}

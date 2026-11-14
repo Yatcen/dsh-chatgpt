@@ -1,0 +1,31 @@
+# Secrets and local authorization state
+.env
+.env.*
+!.env.example
+chatgpt-auth.json
+chatgpt-host.json
+*token*.json
+.dsh-chatgpt/
+
+# Local runtime state
+.data/
+agent-state/
+logs/
+tmp/
+
+# Language and tool caches
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
